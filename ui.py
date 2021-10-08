@@ -1,5 +1,7 @@
 import tkinter as tk
+from tkinter import ttk
 import line
+import second_order_lines
 import time
 from enum import Enum
 
@@ -27,7 +29,7 @@ class App(tk.Tk):
         self.begin = None
         self.dots = None
         self.debug = tk.BooleanVar(False)
-        self.line_method = line.digital_differential_analyzer
+        self.draw_method = line.digital_differential_analyzer
 
         self.title('Editor')
 
@@ -43,8 +45,15 @@ class App(tk.Tk):
         line_menu.add_command(label='Брезенхем', command=self.bresenham)
         line_menu.add_command(label='Алгоритм Ву', command=self.wu)
 
+        second_order_lines_menu = tk.Menu(self.menu, tearoff=0)
+        second_order_lines_menu.add_command(label='Окружность', command=self.circle)
+        second_order_lines_menu.add_command(label='Эллипс', command=self.ellipse)
+        second_order_lines_menu.add_command(label='Гипербола', command=self.hyperbola)
+        second_order_lines_menu.add_command(label='Парабола', command=self.parabola)
+
         self.menu.add_cascade(label='Файл', menu = file_menu)
         self.menu.add_cascade(label='Отрезки', menu = line_menu)
+        self.menu.add_cascade(label='Линии второго порядка', menu = second_order_lines_menu)
 
         self.toolbar = tk.Frame(self.master, bd=1, relief=tk.RAISED)
         
@@ -65,6 +74,33 @@ class App(tk.Tk):
             command=self.wu, text='Алгоритм Ву'
         )
         wu_button.pack(side=tk.LEFT)
+
+        sep = ttk.Separator(self.toolbar)
+        sep.pack(side=tk.LEFT, fill=tk.Y)
+
+        circle_button = tk.Button(
+            self.toolbar, relief=tk.FLAT,
+            command=self.circle, text='Окружность'
+        )
+        circle_button.pack(side=tk.LEFT)
+
+        ellipse_button = tk.Button(
+            self.toolbar, relief=tk.FLAT,
+            command=self.ellipse, text='Эллипс'
+        )
+        ellipse_button.pack(side=tk.LEFT)
+
+        hyperbola_button = tk.Button(
+            self.toolbar, relief=tk.FLAT,
+            command=self.hyperbola, text='Гипербола'
+        )
+        hyperbola_button.pack(side=tk.LEFT)
+
+        parabola_button = tk.Button(
+            self.toolbar, relief=tk.FLAT,
+            command=self.parabola, text='Парабола'
+        )
+        parabola_button.pack(side=tk.LEFT)
 
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
@@ -98,7 +134,7 @@ class App(tk.Tk):
                 end = line.Dot(x = x // 10, y = y // 10)
             else:
                 end = line.Dot(x = x, y = y)
-            dots = self.line_method(self.begin, end)
+            dots = self.draw_method(self.begin, end)
             for dot in dots:
                 if self.debug.get():
                     self.canvas.create_rectangle(dot.x * 10, dot.y * 10, dot.x * 10 + 10, dot.y * 10 + 10, fill=color_intesity[dot.i], tags='dline')
@@ -116,8 +152,7 @@ class App(tk.Tk):
     def mouse_motion(self, event) -> None:
         if self.begin is not None and not self.debug.get():
             x, y = event.x, event.y
-            print(self.begin)
-            dots = self.line_method(self.begin, line.Dot(x = x, y = y))
+            dots = self.draw_method(self.begin, line.Dot(x = x, y = y))
             self.canvas.delete('line')
             self.draw_lines()
             for dot in dots:
@@ -133,16 +168,32 @@ class App(tk.Tk):
         self.destroy()
 
     def dda(self):
-        self.line_method = line.digital_differential_analyzer
+        self.draw_method = line.digital_differential_analyzer
         self.statuslabel.config(text='Отрезки будут отрисованы методом ЦДА')
     
     def bresenham(self):
-        self.line_method = line.bresenham
+        self.draw_method = line.bresenham
         self.statuslabel.config(text='Отрезки будут отрисованы методом Брезенхема')
 
     def wu(self):
-        self.line_method = line.wu
+        self.draw_method = line.wu
         self.statuslabel.config(text='Отрезки будут отрисованы алгоритмом Ву')
+
+    def circle(self):
+        self.draw_method = second_order_lines.circle
+        self.statuslabel.config(text='Будет отрисована окружность')
+
+    def ellipse(self):
+        self.draw_method = second_order_lines.ellipse
+        self.statuslabel.config(text='Будет отрисован эллипс')
+
+    def hyperbola(self):
+        self.draw_method = second_order_lines.hyperbola
+        self.statuslabel.config(text='Будет отрисована гипербола')
+
+    def parabola(self):
+        self.draw_method = second_order_lines.parabola
+        self.statuslabel.config(text='Будет отрисована парабола')
 
     def draw_grid(self):
         if self.debug.get():
@@ -155,7 +206,7 @@ class App(tk.Tk):
             self.canvas.delete('grid_line_h', 'grid_line_w', 'dline')
 
     def clear(self):
-        self.canvas.delete('grid_line_h', 'grid_line_w', 'line')
+        self.canvas.delete('grid_line_h', 'grid_line_w', 'line', 'dline')
         self.lines.clear()
         if self.debug.get():
             self.draw_grid()
