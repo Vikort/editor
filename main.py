@@ -1,5 +1,3 @@
-from dot import Dot
-import curve
 import ui
 
 
